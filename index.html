@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Symfony2 Tips and Tricks</title>
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="styles/styles.css"/>
+</head>
+<body>
+    <article>
+
+        <section>
+            <h1>Symfony2 Tips and Tricks</h1>
+            <h3>Best practices from official guide &amp; other places</h3>
+        </section>
+
+        <section>
+            <h2>Symfony Best Practices</h2>
+            <hr>
+            <img src="best-pr.png"/><br />
+            <p>http://symfony.com/doc/current/best_practices/index.html</p>
+        </section>
+
+        <section>
+            <h2>Creating Project</h2>
+            <hr>
+            <p>Composer is no longer the favorite way!</p>
+        <pre><code class="language-php">
+$ curl -LsS http://symfony.com/installer > symfony.phar
+$ sudo mv symfony.phar /usr/local/bin/symfony
+$ chmod a+x /usr/local/bin/symfony
+
+$ symfony new blogs
+        </code></pre>
+        </section>
+
+        <section>
+            <h2>Project Structure</h2>
+            <hr>
+            <img src="symfony2-dir.png"/>
+        </section>
+
+        <section>
+            <h2>Project Structure</h2>
+            <hr>
+            <ul>
+                <li><pre><code class="language-css">Create only one bundle called <strong>AppBundle</strong> for your application logic.</code></pre></li>
+                <li><pre><code class="language-css">Store all your application's templates in <strong>app/Resources/views/</strong> directory.</code></pre></li>
+                <li><pre><code class="language-css">Store your assets in the <strong>web/</strong> directory.</code></pre></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Some more best practices</h2>
+            <hr>
+            <ul>
+                <li><pre><code class="language-css">Define your forms as PHP classes.</code></pre></li>
+                <li><pre><code class="language-css">Use Assetic to compile, combine and minimize web assets.</code></pre></li>
+                <li><pre><code class="language-css">Use annotations to define the mapping information of the Doctrine entities.</code></pre></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Assorted Tips</h2>
+        </section>
+
+        <section>
+            <h2>Always use param converters</h2>
+            <hr>
+            <pre><code class="language-php">
+// Not recommended
+
+public function deleteTagAction()
+{
+    $this->get('app.tag_manager')->deleteTag(
+        $this->getRequest()->get('tag_id')
+    );
+}
+                </code></pre>
+        </section>
+
+        <section>
+            <h2>Always use param converters</h2>
+            <hr>
+            <pre><code class="language-php">
+// Much better
+
+public function deleteTagAction(Tag $tag)
+{
+    $this->get('app.tag_manager')->deleteTag($tag);
+}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Don't inject service container everywhere</h2>
+            <hr>
+            <pre><code class="language-php">
+// Service which does not need whole Container
+
+class UserManager
+{
+    private $container;
+
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
+    }
+}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Don't inject service container everywhere</h2>
+            <hr>
+            <pre><code class="language-php">
+// Just inject the required dependency
+
+class UserManager
+{
+    private $em;
+
+    public function __construct(EntityManager $em)
+    {
+        $this->em = $em;
+    }
+}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Avoid business logic in controller</h2>
+            <hr>
+            <pre><code class="language-php">
+// Not recommended
+
+public function updateUserAction(User $user, $userData)
+{
+    $user->updateFromArray($userData);
+    $this->getDoctrine()->getManager()->flush($user);
+}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Avoid business logic in controller</h2>
+            <hr>
+            <pre><code class="language-php">
+// Better
+
+public function updateUserAction(User $user, $userData)
+{
+    $this->get('user_manager')->update($user, $userData);
+}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Use JsonResponse when returning JSON</h2>
+            <hr>
+            <pre><code class="language-php">
+// Most common way
+
+use Symfony\Component\HttpFoundation\Response;
+
+$response = new Response();
+$response->setContent(json_encode(array(
+    'data' => 123,
+)));
+
+$response->headers->set('Content-Type', 'application/json');
+return $response;
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Use JsonResponse when returning JSON</h2>
+            <hr>
+            <pre><code class="language-php">
+// Much better
+
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+return new JsonResponse(array('data' => 123));
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Optimize the autoloader</h2>
+            <hr>
+            <pre><code class="language-php">composer dump-autoload --optimize</code></pre>
+        </section>
+
+        <section>
+            <h2>Don't load test classes/libraries in production</h2>
+            <hr>
+            <pre><code class="language-javascript">
+{
+    "autoload": {
+        "psr-4": { "MyLibrary\\": "src/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "MyLibrary\\Tests\\": "tests/" }
+    }
+}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>References</h2>
+            <ul>
+                <li><pre>Find the bundle you need - KNP Bundles (http://knpbundles.com)</pre></li>
+                <li><pre>The 30 Most Useful Symfony Bundles (http://bit.ly/1B0bRD0)</pre></li>
+                <li><pre>Sound of Symfony (http://www.soundofsymfony.com/)</pre></li>
+                <li><pre>Bundles, No bundles, and App bundles (http://knpuniversity.com/blog/AppBundle)</pre></li>
+            </ul>
+        </section>
+
+        <section>
+            <h1>Thanks!</h1>
+        </section>
+
+        <section>
+            <h2>About Me</h2>
+
+        <pre><code class="language-php">
+$about = [
+    'name'  => 'Mohammad Emran Hasan',
+    'title' => 'CTO, Right Brain Solution',
+    'email' => 'phpfour@gmail.com',
+    'web'   => 'http://phpfour.com'
+];
+        </code></pre>
+        </section>
+
+    </article>
+    <script src="scripts/scripts.js"></script>
+</body>
+</html>
